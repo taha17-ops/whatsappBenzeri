@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Web Stratejisi: İnteraktif Analiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony (Warm neutrals with soft green/blue accents) -->
+    <!-- Application Structure Plan: The application is structured as a single-page dashboard with a fixed sidebar navigation. This thematic structure, divided into Strategy, Design, Technology, Security/Legal, Marketing, and Roadmap, allows users to explore the report's key pillars non-linear ly. This is more user-friendly than a long scroll, as it lets users (e.g., developers, marketers) jump directly to sections relevant to their interests, fostering a more engaging and self-directed exploration of the complex analysis. -->
+    <!-- Visualization & Content Choices: 
+        - Strategy -> HTML/CSS Funnel Diagram -> Interaction: Hover tooltips -> Justification: Visually simplifies the core "conversion funnel" concept.
+        - Design -> Interactive Comparison Table -> Interaction: Toggle buttons -> Justification: Directly compares Mobile vs. Desktop experiences, making strategic differences clear.
+        - Technology -> Dynamic Bar Chart (Chart.js) -> Interaction: Dropdown filter -> Justification: Transforms a static data table into an engaging, explorable visualization for comparing tech stacks.
+        - Security/Legal -> Accordion Panels -> Interaction: Click to expand -> Justification: Organizes detailed legal requirements into digestible, on-demand chunks.
+        - Marketing -> Filterable Grid -> Interaction: Category filter buttons -> Justification: Allows users to easily sort through the content matrix to see strategies for different audiences.
+        - Roadmap -> Interactive Checklist -> Interaction: Clickable checkboxes -> Justification: Provides a clear, actionable summary of the report's final recommendations.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .nav-link { transition: all 0.2s ease-in-out; }
+        .nav-link.active { background-color: #25d366; color: white; transform: translateX(4px); }
+        .nav-link:not(.active):hover { background-color: #e2e8f0; color: #1e293b; transform: translateX(2px); }
+        .content-section { display: none; }
+        .content-section.active { display: block; animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .chart-container { position: relative; width: 100%; max-width: 700px; margin-left: auto; margin-right: auto; height: 400px; max-height: 50vh; }
+        .funnel { display: flex; flex-direction: column; align-items: center; }
+        .funnel-segment { position: relative; clip-path: polygon(10% 0, 90% 0, 100% 100%, 0% 100%); text-align: center; color: white; font-weight: 600; display: flex; align-items: center; justify-content: center; transition: transform 0.2s ease; }
+        .funnel-segment:hover { transform: scale(1.05); }
+        .tooltip { visibility: hidden; opacity: 0; transition: opacity 0.3s; }
+        .funnel-segment:hover .tooltip { visibility: visible; opacity: 1; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div class="flex min-h-screen">
+        <aside class="w-64 bg-white shadow-md p-4 sticky top-0 h-screen hidden md:flex flex-col">
+            <h1 class="text-2xl font-bold text-slate-800 mb-2">Strateji Analizi</h1>
+            <p class="text-sm text-slate-500 mb-8">WhatsApp Web Sitesi</p>
+            <nav id="desktop-nav" class="flex flex-col space-y-2">
+                <a href="#strateji" class="nav-link active px-4 py-2 rounded-lg font-medium text-slate-600">Stratejik Amaç</a>
+                <a href="#tasarim" class="nav-link px-4 py-2 rounded-lg font-medium text-slate-600">Tasarım ve UX</a>
+                <a href="#teknoloji" class="nav-link px-4 py-2 rounded-lg font-medium text-slate-600">Teknoloji Yığını</a>
+                <a href="#guvenlik" class="nav-link px-4 py-2 rounded-lg font-medium text-slate-600">Güvenlik ve Hukuk</a>
+                <a href="#pazarlama" class="nav-link px-4 py-2 rounded-lg font-medium text-slate-600">Pazarlama Stratejisi</a>
+                <a href="#yol-haritasi" class="nav-link px-4 py-2 rounded-lg font-medium text-slate-600">Nihai Yol Haritası</a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 p-4 md:p-8 lg:p-12 overflow-y-auto">
+            <div class="md:hidden mb-4">
+                <select id="mobile-nav" class="w-full p-2 border rounded-lg bg-white shadow">
+                    <option value="#strateji">Stratejik Amaç</option>
+                    <option value="#tasarim">Tasarım ve UX</option>
+                    <option value="#teknoloji">Teknoloji Yığını</option>
+                    <option value="#guvenlik">Güvenlik ve Hukuk</option>
+                    <option value="#pazarlama">Pazarlama Stratejisi</option>
+                    <option value="#yol-haritasi">Nihai Yol Haritası</option>
+                </select>
+            </div>
+
+            <section id="strateji" class="content-section active">
+                <h2 class="text-3xl font-bold mb-4">Stratejik Amaç: Bir Dönüşüm Hunisi Olarak Web Sitesi</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">
+                    WhatsApp'ın web sitesi, basit bir bilgilendirme platformundan çok daha fazlasıdır. Temel amacı, potansiyel kullanıcıları mobil uygulamayı indirmeye ve kullanmaya ikna eden, dikkatle tasarlanmış bir "dönüşüm hunisi" olarak hizmet etmektir. Bu bölüm, web sitesinin bu stratejik rolünü ve kullanıcıyı nasıl adım adım hedefe yönlendirdiğini görselleştirir.
+                </p>
+                <div class="funnel w-full max-w-lg mx-auto space-y-1">
+                    <div class="funnel-segment w-full h-16 bg-emerald-500" style="clip-path: polygon(20% 0, 80% 0, 100% 100%, 0% 100%);">
+                        <span>Farkındalık Yaratma</span>
+                        <div class="tooltip absolute bottom-full mb-2 w-64 p-2 bg-slate-800 text-white text-xs rounded-lg shadow-lg">
+                            Web sitesi, arama motorları ve sosyal medya aracılığıyla geniş kitlelere ulaşarak markayı tanıtır.
+                        </div>
+                    </div>
+                    <div class="funnel-segment w-4/5 h-16 bg-emerald-600" style="clip-path: polygon(15% 0, 85% 0, 100% 100%, 0% 100%);">
+                        <span>Bilgilendirme ve Değer Sunma</span>
+                        <div class="tooltip absolute bottom-full mb-2 w-64 p-2 bg-slate-800 text-white text-xs rounded-lg shadow-lg">
+                            Özellikler, güvenlik ve kullanım kolaylığı gibi temel değer önerileri net bir şekilde sunulur.
+                        </div>
+                    </div>
+                    <div class="funnel-segment w-3/5 h-16 bg-emerald-700" style="clip-path: polygon(10% 0, 90% 0, 100% 100%, 0% 100%);">
+                        <span>İkna Etme ve Güven Oluşturma</span>
+                         <div class="tooltip absolute bottom-full mb-2 w-64 p-2 bg-slate-800 text-white text-xs rounded-lg shadow-lg">
+                            Uçtan uca şifreleme gibi güvenlik özellikleri ve şeffaf politikalar ile kullanıcı güveni kazanılır.
+                        </div>
+                    </div>
+                    <div class="funnel-segment w-2/5 h-16 bg-emerald-800 rounded-b-lg" style="clip-path: none;">
+                        <span>Dönüşüm: İndirme</span>
+                         <div class="tooltip absolute bottom-full mb-2 w-64 p-2 bg-slate-800 text-white text-xs rounded-lg shadow-lg">
+                            Tüm yolculuğun nihai hedefi: Kullanıcıyı "İndir" düğmesine tıklamaya yönlendirmek.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold mb-4">✨ Dönüşüm Hunisi İpucu Üretici</h3>
+                    <p class="text-slate-600 mb-4">Seçtiğiniz dönüşüm hunisi aşaması için yeni ipuçları oluşturun.</p>
+                    <div class="mb-4">
+                        <label for="funnel-stage-selector" class="block text-sm font-medium text-slate-700 mb-1">Aşama Seçin:</label>
+                        <select id="funnel-stage-selector" class="w-full p-2 border rounded-lg bg-slate-50">
+                            <option value="Farkındalık Yaratma">Farkındalık Yaratma</option>
+                            <option value="Bilgilendirme ve Değer Sunma">Bilgilendirme ve Değer Sunma</option>
+                            <option value="İkna Etme ve Güven Oluşturma">İkna Etme ve Güven Oluşturma</option>
+                            <option value="Dönüşüm: İndirme">Dönüşüm: İndirme</option>
+                        </select>
+                    </div>
+                    <button id="generate-funnel-tip-btn" class="bg-blue-600 text-white px-5 py-2 rounded-full font-semibold hover:bg-blue-700 transition duration-200">
+                        İpucu Üret ✨
+                    </button>
+                    <div id="funnel-tip-output" class="mt-4 p-4 bg-slate-50 border rounded-lg hidden">
+                        <ul class="list-disc list-inside space-y-2 text-slate-700" id="funnel-tip-text"></ul>
+                        <div id="funnel-tip-loading" class="flex justify-center items-center py-4 hidden">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                            <span class="ml-3 text-slate-600">İpuçları üretiliyor...</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tasarim" class="content-section">
+                <h2 class="text-3xl font-bold mb-4">Tasarım ve UX: Platforma Özel Deneyimler</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">
+                    Başarılı bir uygulama web sitesi, mobil ve masaüstü platformlar için sadece duyarlı değil, aynı zamanda stratejik olarak farklılaştırılmış deneyimler sunmalıdır. Web sitesi bir "pazarlama broşürü" iken, uygulama zengin bir "kullanım aracıdır". Bu karşılaştırma, her platformun güçlü yönlerini ve hedeflerini ortaya koyar.
+                </p>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="comparison-container">
+                        <div>
+                            <h3 class="text-xl font-semibold mb-2 text-cyan-600">Mobil Web Sitesi</h3>
+                            <p class="text-sm text-slate-500 mb-4">Geniş kitlelere ulaşım ve ilk temas noktası.</p>
+                            <ul class="space-y-2 text-slate-700">
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">✔</span> Hızlı erişim, kurulum gerektirmez.</li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">✔</span> SEO ve paylaşılabilirlik için optimize edilmiştir.</li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">✔</span> Temel özellikleri ve değeri sergiler.</li>
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">✖</span> Anlık bildirimler ve derin entegrasyon sunmaz.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold mb-2 text-indigo-600">Masaüstü / Mobil Uygulama</h3>
+                            <p class="text-sm text-slate-500 mb-4">Güçlü kullanıcılar için zengin ve entegre deneyim.</p>
+                            <ul class="space-y-2 text-slate-700">
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">✔</span> Anlık bildirimler ve işletim sistemi entegrasyonu.</li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">✔</span> Daha hızlı performans ve çevrimdışı yetenekler.</li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">✔</span> Klavye kısayolları ve gelişmiş özellikler (örn. aramalar).</li>
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">✖</span> İndirme ve kurulum adımı gerektirir.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold mb-4">✨ UX Geliştirme Önerisi Üretici</h3>
+                    <p class="text-slate-600 mb-4">Seçtiğiniz platform için kullanıcı deneyimi geliştirme önerileri alın.</p>
+                    <div class="mb-4">
+                        <label for="ux-platform-selector" class="block text-sm font-medium text-slate-700 mb-1">Platform Seçin:</label>
+                        <select id="ux-platform-selector" class="w-full p-2 border rounded-lg bg-slate-50">
+                            <option value="mobil web sitesi">Mobil Web Sitesi</option>
+                            <option value="masaüstü veya mobil uygulama">Masaüstü / Mobil Uygulama</option>
+                        </select>
+                    </div>
+                    <button id="generate-ux-tip-btn" class="bg-blue-600 text-white px-5 py-2 rounded-full font-semibold hover:bg-blue-700 transition duration-200">
+                        Öneri Üret ✨
+                    </button>
+                    <div id="ux-tip-output" class="mt-4 p-4 bg-slate-50 border rounded-lg hidden">
+                        <ul class="list-disc list-inside space-y-2 text-slate-700" id="ux-tip-text"></ul>
+                        <div id="ux-tip-loading" class="flex justify-center items-center py-4 hidden">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                            <span class="ml-3 text-slate-600">Öneriler üretiliyor...</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="teknoloji" class="content-section">
+                <h2 class="text-3xl font-bold mb-4">Teknoloji Yığını: Amaca Uygun Seçimler</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">
+                    WhatsApp'ın mesajlaşma altyapısı (Erlang) ile pazarlama web sitesinin teknolojisi (JavaScript) arasındaki fark, her ürünün kendi amacına hizmet ettiğini gösterir. Bir pazarlama sitesi için en doğru yaklaşım, aşırı mühendislikten kaçınarak hızlı, SEO dostu ve bakımı kolay teknolojileri seçmektir.
+                </p>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <div class="mb-4">
+                        <label for="tech-category" class="block text-sm font-medium text-slate-700 mb-1">Karşılaştırma Kategorisi Seçin:</label>
+                        <select id="tech-category" class="w-full md:w-1/2 p-2 border rounded-lg bg-slate-50">
+                            <option value="frontend" selected>Ön Uç (Front-End) Framework</option>
+                            <option value="backend">Arka Uç (Back-End) Dili</option>
+                            <option value="database">Veritabanı</option>
+                        </select>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="techChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold mb-4">✨ Teknoloji Yığını Özeti</h3>
+                    <p class="text-slate-600 mb-4">Seçilen teknoloji hakkında hızlı bir özet alın.</p>
+                    <button id="generate-tech-summary-btn" class="bg-blue-600 text-white px-5 py-2 rounded-full font-semibold hover:bg-blue-700 transition duration-200">
+                        Özet Üret ✨
+                    </button>
+                    <div id="tech-summary-output" class="mt-4 p-4 bg-slate-50 border rounded-lg hidden">
+                        <p class="text-sm text-slate-700" id="tech-summary-text"></p>
+                        <div id="tech-summary-loading" class="flex justify-center items-center py-4 hidden">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                            <span class="ml-3 text-slate-600">Özet üretiliyor...</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="guvenlik" class="content-section">
+                <h2 class="text-3xl font-bold mb-4">Güvenlik ve Hukuk: Güven İnşası</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">
+                    Kullanıcı güveni, şeffaflık üzerine kuruludur. Bir yanda mesaj içeriğini koruyan uçtan uca şifreleme (E2EE) gibi güçlü güvenlik vaatleri, diğer yanda ise hizmeti iyileştirmek için toplanan meta veriler bulunur. Bu dengeyi ve yasal zorunlulukları (KVKK, GDPR) açıkça anlatan belgeler, güvenin temelini oluşturur.
+                </p>
+                <div class="space-y-4" id="legal-accordion">
+                    <div class="bg-white rounded-lg shadow-lg">
+                        <button class="accordion-toggle w-full flex justify-between items-center p-4 font-semibold text-left">
+                            Gizlilik Politikası
+                            <span class="transform transition-transform duration-300">▼</span>
+                        </button>
+                        <div class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out px-4">
+                            <ul class="list-disc list-inside py-4 space-y-2 text-slate-600 border-t">
+                                <li>**Veri Sorumlusu:** Şirketin kim olduğu açıkça belirtilmelidir.</li>
+                                <li>**Toplanan Veri Türleri:** Kişisel, kullanım ve çerez verileri detaylandırılmalıdır.</li>
+                                <li>**İşleme Amaçları:** Verilerin neden toplandığı (hizmet kalitesi, güvenlik vb.) açıklanmalıdır.</li>
+                                <li>**Kullanıcı Hakları:** Veri erişim, düzeltme ve silme gibi haklar listelenmelidir.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-lg">
+                        <button class="accordion-toggle w-full flex justify-between items-center p-4 font-semibold text-left">
+                            Kullanım Koşulları
+                            <span class="transform transition-transform duration-300">▼</span>
+                        </button>
+                        <div class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out px-4">
+                             <ul class="list-disc list-inside py-4 space-y-2 text-slate-600 border-t">
+                                <li>**Kabul Edilebilir Kullanım:** Hizmetin nasıl kullanılması gerektiği tanımlanmalıdır.</li>
+                                <li>**Yasaklı Faaliyetler:** Spam, yasa dışı içerik gibi yasaklar belirtilmelidir.</li>
+                                <li>**Fikri Mülkiyet:** Marka ve içerik hakları korunmalıdır.</li>
+                                <li>**Sorumluluk Sınırları:** Hizmetin garantileri ve yasal sorumluluk reddi açıklanmalıdır.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold mb-4">✨ Hukuki Metin Basitleştirici</h3>
+                    <p class="text-slate-600 mb-4">Karmaşık hukuki veya teknik metinleri basit bir dille açıklayın.</p>
+                    <div class="mb-4">
+                        <textarea id="legal-text-input" class="w-full p-2 border rounded-lg bg-slate-50 h-24" placeholder="Örn: Uçtan uca şifreleme nedir?"></textarea>
+                    </div>
+                    <button id="simplify-legal-btn" class="bg-blue-600 text-white px-5 py-2 rounded-full font-semibold hover:bg-blue-700 transition duration-200">
+                        Basitleştir ✨
+                    </button>
+                    <div id="legal-summary-output" class="mt-4 p-4 bg-slate-50 border rounded-lg hidden">
+                        <p class="text-sm text-slate-700" id="legal-summary-text"></p>
+                        <div id="legal-summary-loading" class="flex justify-center items-center py-4 hidden">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                            <span class="ml-3 text-slate-600">Metin basitleştiriliyor...</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="pazarlama" class="content-section">
+                <h2 class="text-3xl font-bold mb-4">Pazarlama Stratejisi: Dinamik İçerik Motoru</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">
+                    Web sitesi, statik bir vitrin değil, yaşayan bir pazarlama aracıdır. Blog yazılarıyla yenilikleri duyurur, başarı hikayeleriyle işletmeleri ikna eder ve farklı kitlelere yönelik içeriklerle kullanıcı yolculuğunun her aşamasına dokunur. Bu matris, farklı içerik türlerinin stratejik hedeflerini özetler.
+                </p>
+                <div class="mb-6 flex flex-wrap gap-2" id="marketing-filters">
+                    <button data-filter="all" class="filter-btn bg-green-500 text-white px-4 py-2 rounded-full font-semibold">Tümü</button>
+                    <button data-filter="bireysel" class="filter-btn bg-white text-slate-700 px-4 py-2 rounded-full font-semibold border">Bireysel Kullanıcılar</button>
+                    <button data-filter="isletme" class="filter-btn bg-white text-slate-700 px-4 py-2 rounded-full font-semibold border">İşletme Kullanıcıları</button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="marketing-grid">
+                    <div class="marketing-card bg-white p-6 rounded-lg shadow-lg" data-target="bireysel isletme">
+                        <h3 class="font-bold text-lg mb-2">Blog Yazıları</h3>
+                        <p class="text-sm text-slate-600 mb-3">Yeni özellikler ve güvenlik güncellemeleri ile marka bilinirliğini artırır.</p>
+                        <span class="text-xs font-semibold bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Eğitim</span>
+                    </div>
+                    <div class="marketing-card bg-white p-6 rounded-lg shadow-lg" data-target="isletme">
+                        <h3 class="font-bold text-lg mb-2">Başarı Hikayeleri</h3>
+                        <p class="text-sm text-slate-600 mb-3">Somut iş sonuçları sunarak potansiyel işletme müşterilerinde güven oluşturur.</p>
+                        <span class="text-xs font-semibold bg-amber-100 text-amber-800 px-2 py-1 rounded-full">Dönüşüm</span>
+                    </div>
+                    <div class="marketing-card bg-white p-6 rounded-lg shadow-lg" data-target="bireysel isletme">
+                        <h3 class="font-bold text-lg mb-2">Özellik Sayfaları</h3>
+                        <p class="text-sm text-slate-600 mb-3">Uygulamanın yeteneklerini detaylı anlatarak kullanıcıların karar vermesini destekler.</p>
+                        <span class="text-xs font-semibold bg-cyan-100 text-cyan-800 px-2 py-1 rounded-full">Bilgilendirme</span>
+                    </div>
+                     <div class="marketing-card bg-white p-6 rounded-lg shadow-lg" data-target="bireysel isletme">
+                        <h3 class="font-bold text-lg mb-2">Tanıtım Videoları</h3>
+                        <p class="text-sm text-slate-600 mb-3">Görsel ve etkileyici bir şekilde uygulamanın ana değerini sunarak farkındalık yaratır.</p>
+                        <span class="text-xs font-semibold bg-purple-100 text-purple-800 px-2 py-1 rounded-full">Farkındalık</span>
+                    </div>
+                    <div class="marketing-card bg-white p-6 rounded-lg shadow-lg" data-target="bireysel isletme">
+                        <h3 class="font-bold text-lg mb-2">Yardım Merkezi (SSS)</h3>
+                        <p class="text-sm text-slate-600 mb-3">Kullanıcı sorunlarına hızlı çözümler sunarak müşteri memnuniyetini ve sadakatini artırır.</p>
+                        <span class="text-xs font-semibold bg-gray-100 text-gray-800 px-2 py-1 rounded-full">Destek</span>
+                    </div>
+                </div>
+            </section>
+
+            <section id="yol-haritasi" class="content-section">
+                <h2 class="text-3xl font-bold mb-4">Nihai Yol Haritası: Başarı İçin 5 Adım</h2>
+                <p class="text-lg text-slate-600 mb-8 max-w-3xl">
+                    Raporun analizi, başarılı bir uygulama web sitesi oluşturmak için net bir yol haritası sunmaktadır. Bu adımlar, projenin temelini oluşturarak stratejiden uygulamaya kadar tüm süreci kapsar.
+                </p>
+                <div class="space-y-4 max-w-2xl">
+                    <label class="flex items-center p-4 bg-white rounded-lg shadow-lg cursor-pointer hover:bg-slate-50">
+                        <input type="checkbox" class="h-6 w-6 rounded border-gray-300 text-green-600 focus:ring-green-500">
+                        <span class="ml-4 text-lg font-medium text-slate-700">Stratejik Planlama</span>
+                    </label>
+                    <label class="flex items-center p-4 bg-white rounded-lg shadow-lg cursor-pointer hover:bg-slate-50">
+                        <input type="checkbox" class="h-6 w-6 rounded border-gray-300 text-green-600 focus:ring-green-500">
+                        <span class="ml-4 text-lg font-medium text-slate-700">Tasarım ve UX Odaklılık</span>
+                    </label>
+                    <label class="flex items-center p-4 bg-white rounded-lg shadow-lg cursor-pointer hover:bg-slate-50">
+                        <input type="checkbox" class="h-6 w-6 rounded border-gray-300 text-green-600 focus:ring-green-500">
+                        <span class="ml-4 text-lg font-medium text-slate-700">Doğru Teknoloji Seçimi</span>
+                    </label>
+                    <label class="flex items-center p-4 bg-white rounded-lg shadow-lg cursor-pointer hover:bg-slate-50">
+                        <input type="checkbox" class="h-6 w-6 rounded border-gray-300 text-green-600 focus:ring-green-500">
+                        <span class="ml-4 text-lg font-medium text-slate-700">Hukuk ve Güvenlik Uyumu</span>
+                    </label>
+                    <label class="flex items-center p-4 bg-white rounded-lg shadow-lg cursor-pointer hover:bg-slate-50">
+                        <input type="checkbox" class="h-6 w-6 rounded border-gray-300 text-green-600 focus:ring-green-500">
+                        <span class="ml-4 text-lg font-medium text-slate-700">Dinamik İçerik ve Pazarlama</span>
+                    </label>
+                </div>
+            </section>
+        </main>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const desktopNavLinks = document.querySelectorAll('#desktop-nav a');
+        const mobileNav = document.getElementById('mobile-nav');
+        const sections = document.querySelectorAll('.content-section');
+        let techChart;
+
+        function setActiveLink(targetId) {
+            desktopNavLinks.forEach(link => {
+                link.classList.toggle('active', link.getAttribute('href') === targetId);
+            });
+            mobileNav.value = targetId;
+        }
+
+        function showSection(targetId) {
+            sections.forEach(section => {
+                section.classList.toggle('active', '#' + section.id === targetId);
+            });
+            setActiveLink(targetId);
+            if (targetId === '#teknoloji' && !techChart) {
+                initTechChart();
+            }
+        }
+
+        function handleNavClick(event) {
+            event.preventDefault();
+            const targetId = event.currentTarget.getAttribute('href');
+            showSection(targetId);
+            window.history.pushState(null, '', targetId);
+        }
+
+        desktopNavLinks.forEach(link => link.addEventListener('click', handleNavClick));
+        mobileNav.addEventListener('change', (e) => {
+            showSection(e.target.value);
+            window.history.pushState(null, '', e.target.value);
+        });
+        
+        window.addEventListener('popstate', () => {
+            const hash = window.location.hash || '#strateji';
+            showSection(hash);
+        });
+
+        const initialHash = window.location.hash || '#strateji';
+        showSection(initialHash);
+
+        const techData = {
+            frontend: {
+                labels: ['React / Next.js', 'Vue.js / Nuxt.js'],
+                datasets: [{
+                    label: 'Öğrenme Eğrisi (Düşük = Kolay)',
+                    data: [7, 4],
+                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    borderWidth: 1
+                }, {
+                    label: 'Ekosistem Genişliği (Yüksek = Geniş)',
+                    data: [9, 7],
+                    backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    borderWidth: 1
+                }]
+            },
+            backend: {
+                labels: ['Python (Django)', 'PHP (Laravel)', 'Node.js (Express)'],
+                datasets: [{
+                    label: 'Geliştirme Hızı',
+                    data: [9, 8, 8],
+                    backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                }, {
+                    label: 'Performans',
+                    data: [7, 7, 9],
+                    backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                }]
+            },
+            database: {
+                labels: ['MySQL', 'PostgreSQL'],
+                datasets: [{
+                    label: 'Popülerlik ve Destek',
+                    data: [9, 7],
+                    backgroundColor: 'rgba(139, 92, 246, 0.7)',
+                }, {
+                    label: 'Özellik Zenginliği',
+                    data: [7, 9],
+                    backgroundColor: 'rgba(236, 72, 153, 0.7)',
+                }]
+            }
+        };
+
+        function initTechChart() {
+            const ctx = document.getElementById('techChart').getContext('2d');
+            techChart = new Chart(ctx, {
+                type: 'bar',
+                data: techData.frontend,
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { beginAtZero: true, max: 10 }
+                    },
+                    plugins: {
+                        title: { display: true, text: 'Ön Uç (Front-End) Framework Karşılaştırması' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.x !== null) {
+                                        label += context.parsed.x + ' / 10';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        document.getElementById('tech-category').addEventListener('change', function(e) {
+            const category = e.target.value;
+            if (techChart) {
+                techChart.data = techData[category];
+                const titleMap = {
+                    frontend: 'Ön Uç (Front-End) Framework Karşılaştırması',
+                    backend: 'Arka Uç (Back-End) Dili Karşılaştırması',
+                    database: 'Veritabanı Karşılaştırması'
+                };
+                techChart.options.plugins.title.text = titleMap[category];
+                techChart.update();
+            }
+        });
+
+        document.querySelectorAll('.accordion-toggle').forEach(button => {
+            button.addEventListener('click', () => {
+                const content = button.nextElementSibling;
+                const icon = button.querySelector('span');
+                if (content.style.maxHeight) {
+                    content.style.maxHeight = null;
+                    icon.style.transform = 'rotate(0deg)';
+                } else {
+                    document.querySelectorAll('.accordion-content').forEach(el => el.style.maxHeight = null);
+                    document.querySelectorAll('.accordion-toggle span').forEach(el => el.style.transform = 'rotate(0deg)');
+                    content.style.maxHeight = content.scrollHeight + "px";
+                    icon.style.transform = 'rotate(180deg)';
+                }
+            });
+        });
+
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const marketingCards = document.querySelectorAll('.marketing-card');
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const filter = button.dataset.filter;
+                
+                filterButtons.forEach(btn => {
+                    btn.classList.remove('bg-green-500', 'text-white');
+                    btn.classList.add('bg-white', 'text-slate-700');
+                });
+                button.classList.add('bg-green-500', 'text-white');
+                button.classList.remove('bg-white', 'text-slate-700');
+
+                marketingCards.forEach(card => {
+                    if (filter === 'all' || card.dataset.target.includes(filter)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        async function callGeminiApi(prompt, schema = null) {
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+            const payload = { contents: chatHistory };
+
+            if (schema) {
+                payload.generationConfig = {
+                    responseMimeType: "application/json",
+                    responseSchema: schema
+                };
+            }
+
+            const apiKey = ""; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            let retries = 0;
+            const maxRetries = 5;
+            const baseDelay = 1000; 
+
+            while (retries < maxRetries) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 429) { 
+                            retries++;
+                            const delay = baseDelay * Math.pow(2, retries - 1);
+                            await new Promise(res => setTimeout(res, delay));
+                            continue; 
+                        } else {
+                            throw new Error(`API hatası: ${response.status} ${response.statusText}`);
+                        }
+                    }
+
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        if (schema) {
+                            return JSON.parse(text);
+                        }
+                        return text;
+                    } else {
+                        throw new Error("API yanıt yapısı beklenmiyor.");
+                    }
+                } catch (error) {
+                    console.error("Gemini API çağrısı başarısız oldu:", error);
+                    if (retries === maxRetries - 1) {
+                        throw error; 
+                    }
+                    retries++;
+                    const delay = baseDelay * Math.pow(2, retries - 1);
+                    await new Promise(res => setTimeout(res, delay));
+                }
+            }
+            throw new Error("Maksimum tekrar deneme sayısına ulaşıldı.");
+        }
+
+        const funnelStageSelector = document.getElementById('funnel-stage-selector');
+        const generateFunnelTipBtn = document.getElementById('generate-funnel-tip-btn');
+        const funnelTipOutput = document.getElementById('funnel-tip-output');
+        const funnelTipText = document.getElementById('funnel-tip-text');
+        const funnelTipLoading = document.getElementById('funnel-tip-loading');
+
+        generateFunnelTipBtn.addEventListener('click', async () => {
+            const selectedStage = funnelStageSelector.value;
+            funnelTipOutput.classList.add('hidden');
+            funnelTipLoading.classList.remove('hidden');
+            funnelTipText.innerHTML = '';
+
+            const prompt = `Bir web sitesinin '${selectedStage}' dönüşüm hunisi aşaması için 3 kısa, uygulanabilir pazarlama ipucu listesi oluştur. Her ipucu kısa ve öz olsun.`;
+            const schema = {
+                type: "OBJECT",
+                properties: {
+                    "tips": {
+                        type: "ARRAY",
+                        items: { type: "STRING" }
+                    }
+                },
+                propertyOrdering: ["tips"]
+            };
+
+            try {
+                const result = await callGeminiApi(prompt, schema);
+                if (result && result.tips) {
+                    funnelTipText.innerHTML = result.tips.map(tip => `<li>${tip}</li>`).join('');
+                    funnelTipOutput.classList.remove('hidden');
+                } else {
+                    funnelTipText.textContent = 'İpucu oluşturulamadı. Lütfen tekrar deneyin.';
+                    funnelTipOutput.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Dönüşüm hunisi ipucu üretilirken hata:', error);
+                funnelTipText.textContent = 'Hata oluştu: ' + error.message;
+                funnelTipOutput.classList.remove('hidden');
+            } finally {
+                funnelTipLoading.classList.add('hidden');
+            }
+        });
+
+        const techCategorySelector = document.getElementById('tech-category');
+        const generateTechSummaryBtn = document.getElementById('generate-tech-summary-btn');
+        const techSummaryOutput = document.getElementById('tech-summary-output');
+        const techSummaryText = document.getElementById('tech-summary-text');
+        const techSummaryLoading = document.getElementById('tech-summary-loading');
+
+        generateTechSummaryBtn.addEventListener('click', async () => {
+            const selectedCategory = techCategorySelector.value;
+            let selectedTechLabel = '';
+
+            if (selectedCategory === 'frontend') {
+                selectedTechLabel = 'React / Next.js veya Vue.js / Nuxt.js gibi Ön Uç (Front-End) Framework';
+            } else if (selectedCategory === 'backend') {
+                selectedTechLabel = 'Python (Django), PHP (Laravel) veya Node.js (Express) gibi Arka Uç (Back-End) Dili';
+            } else if (selectedCategory === 'database') {
+                selectedTechLabel = 'MySQL veya PostgreSQL gibi Veritabanı';
+            }
+
+            techSummaryOutput.classList.add('hidden');
+            techSummaryLoading.classList.remove('hidden');
+            techSummaryText.textContent = '';
+
+            const prompt = `Modern bir web uygulaması için kullanılan bir ${selectedTechLabel} hakkında kısa, 75 kelimeyi geçmeyen bir özet ve başlıca kullanım alanlarını içeren bir açıklama yap.`;
+            const schema = {
+                type: "OBJECT",
+                properties: {
+                    "summary": { type: "STRING" }
+                },
+                propertyOrdering: ["summary"]
+            };
+
+            try {
+                const result = await callGeminiApi(prompt, schema);
+                if (result && result.summary) {
+                    techSummaryText.textContent = result.summary;
+                    techSummaryOutput.classList.remove('hidden');
+                } else {
+                    techSummaryText.textContent = 'Özet oluşturulamadı. Lütfen tekrar deneyin.';
+                    techSummaryOutput.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Teknoloji özeti üretilirken hata:', error);
+                techSummaryText.textContent = 'Hata oluştu: ' + error.message;
+                techSummaryOutput.classList.remove('hidden');
+            } finally {
+                techSummaryLoading.classList.add('hidden');
+            }
+        });
+
+        const uxPlatformSelector = document.getElementById('ux-platform-selector');
+        const generateUxTipBtn = document.getElementById('generate-ux-tip-btn');
+        const uxTipOutput = document.getElementById('ux-tip-output');
+        const uxTipText = document.getElementById('ux-tip-text');
+        const uxTipLoading = document.getElementById('ux-tip-loading');
+
+        generateUxTipBtn.addEventListener('click', async () => {
+            const selectedPlatform = uxPlatformSelector.value;
+            uxTipOutput.classList.add('hidden');
+            uxTipLoading.classList.remove('hidden');
+            uxTipText.innerHTML = '';
+
+            const prompt = `Bir ${selectedPlatform} için kullanıcı deneyimini (UX) iyileştirmeye yönelik 3 kısa, uygulanabilir öneri listesi oluştur. Her öneri kısa ve öz olsun.`;
+            const schema = {
+                type: "OBJECT",
+                properties: {
+                    "suggestions": {
+                        type: "ARRAY",
+                        items: { type: "STRING" }
+                    }
+                },
+                propertyOrdering: ["suggestions"]
+            };
+
+            try {
+                const result = await callGeminiApi(prompt, schema);
+                if (result && result.suggestions) {
+                    uxTipText.innerHTML = result.suggestions.map(tip => `<li>${tip}</li>`).join('');
+                    uxTipOutput.classList.remove('hidden');
+                } else {
+                    uxTipText.textContent = 'Öneri oluşturulamadı. Lütfen tekrar deneyin.';
+                    uxTipOutput.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('UX önerisi üretilirken hata:', error);
+                uxTipText.textContent = 'Hata oluştu: ' + error.message;
+                uxTipOutput.classList.remove('hidden');
+            } finally {
+                uxTipLoading.classList.add('hidden');
+            }
+        });
+
+        const legalTextInput = document.getElementById('legal-text-input');
+        const simplifyLegalBtn = document.getElementById('simplify-legal-btn');
+        const legalSummaryOutput = document.getElementById('legal-summary-output');
+        const legalSummaryText = document.getElementById('legal-summary-text');
+        const legalSummaryLoading = document.getElementById('legal-summary-loading');
+
+        simplifyLegalBtn.addEventListener('click', async () => {
+            const inputText = legalTextInput.value.trim();
+            if (!inputText) {
+                legalSummaryText.textContent = 'Lütfen basitleştirilecek bir metin girin.';
+                legalSummaryOutput.classList.remove('hidden');
+                return;
+            }
+
+            legalSummaryOutput.classList.add('hidden');
+            legalSummaryLoading.classList.remove('hidden');
+            legalSummaryText.textContent = '';
+
+            const prompt = `Basit ve anlaşılır bir dille, teknik terimlerden kaçınarak, aşağıdaki hukuki veya teknik terimi/cümleyi açıkla: '${inputText}'. Açıklama en fazla 75 kelime olsun ve ana noktaları vurgula.`;
+            const schema = {
+                type: "OBJECT",
+                properties: {
+                    "explanation": { type: "STRING" }
+                },
+                propertyOrdering: ["explanation"]
+            };
+
+            try {
+                const result = await callGeminiApi(prompt, schema);
+                if (result && result.explanation) {
+                    legalSummaryText.textContent = result.explanation;
+                    legalSummaryOutput.classList.remove('hidden');
+                } else {
+                    legalSummaryText.textContent = 'Açıklama oluşturulamadı. Lütfen tekrar deneyin.';
+                    legalSummaryOutput.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Hukuki metin basitleştirilirken hata:', error);
+                legalSummaryText.textContent = 'Hata oluştu: ' + error.message;
+                legalSummaryOutput.classList.remove('hidden');
+            } finally {
+                legalSummaryLoading.classList.add('hidden');
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
